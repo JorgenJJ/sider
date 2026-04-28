@@ -1,25 +1,47 @@
 # Docs
 
-This folder is the single source of truth for project knowledge. Agents should always start here before reading individual source files.
+Single source of truth for project knowledge. **Agents: always start here before reading source files.**
+
+## Quick orientation
+
+| Document | What it tells you |
+|----------|------------------|
+| [architecture.md](./architecture.md) | Tech stack, data model, feature breakdown, deployment pipeline, open questions |
+| [decisions/](./decisions/README.md) | Why key technical choices were made (ADRs) |
+| [specs/](./specs/) | Requirement specs for planned and in-progress features |
+| [bugs/](./bugs/README.md) | Known bugs and issues with severity and status |
 
 ## Structure
 
-| Path | Purpose |
-|------|---------|
-| `docs/specs/` | Requirement specs for planned or in-progress features |
-| `docs/bugs/` | Known bugs and issues (add one file per bug) |
-| `docs/decisions/` | Architecture / design decisions (ADRs) |
+```
+docs/
+├── README.md              ← you are here
+├── architecture.md        ← implementation plan, always keep current
+├── decisions/
+│   ├── README.md          ← ADR index + template
+│   ├── 001-tech-stack.md
+│   └── 002-offline-storage.md
+├── specs/
+│   ├── TEMPLATE.md        ← copy this for new features
+│   └── initial-release.md
+└── bugs/
+    ├── README.md          ← bug index + template
+    └── 001-inapp-browser-data-isolation.md
+```
 
 ## Conventions
 
-- **Specs** follow `docs/specs/TEMPLATE.md`. Give each spec its own file, e.g. `docs/specs/user-auth.md`.
-- **Bugs** can be plain markdown files named after the issue, e.g. `docs/bugs/login-redirect-loop.md`.
-- Keep docs up to date as the codebase evolves — an outdated doc is worse than no doc.
+- **Architecture changes** → update `architecture.md` and add an ADR in `decisions/`.
+- **New features** → copy `specs/TEMPLATE.md`, fill in requirements and acceptance criteria, set Status to `Ready for implementation` when ready for an agent to act on.
+- **Bugs found during implementation** → create a file in `bugs/` before continuing. Reference it from the relevant spec or ADR.
+- **Completed work** → update the spec's Status field and mark relevant bugs as Fixed.
 
 ## For agents
 
-When starting work on a spec:
-1. Read the relevant spec file under `docs/specs/`.
-2. Check `docs/bugs/` for any known issues that might affect your work.
-3. Update the spec's `Status` field as you progress.
-4. If you discover new bugs or issues during implementation, document them in `docs/bugs/`.
+Before starting any implementation task:
+1. Read `architecture.md` for the full picture.
+2. Read the relevant spec in `specs/`.
+3. Check `bugs/README.md` for known issues in your area.
+4. Update spec Status to `In progress` when you begin.
+5. Document any new bugs or issues you find in `bugs/` as you go.
+6. Update spec Status to `Done` and close resolved bugs when work is complete.
