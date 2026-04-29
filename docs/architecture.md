@@ -82,6 +82,26 @@ sider/
 ## 4. Data model
 
 ```typescript
+interface CiderNotes {
+  utseende?: string;      // Look — colour, clarity, carbonation
+  aroma?: string;         // Smell — fruit, earth, off-notes
+  smak?: string;          // Taste — sweetness, acidity, bitterness, fruit character
+  munnfølelse?: string;   // Mouthfeel — body, carbonation, finish length
+  generelt?: string;      // General impressions / free overflow
+}
+
+// ── Reserved for future rating feature — NOT exposed in v1 UI ──────────────
+// Scale is intentionally unspecified; do not assume 1–5.
+// Introduce via a DB version bump when the rating feature is designed.
+interface CiderRatings {
+  utseende?: number;
+  aroma?: number;
+  smak?: number;
+  munnfølelse?: number;
+  totalinntrykk?: number;
+}
+// ────────────────────────────────────────────────────────────────────────────
+
 interface Cider {
   id: string;               // crypto.randomUUID()
   name: string;             // Cider product name
@@ -90,12 +110,13 @@ interface Cider {
   vintage?: number;         // Production year
   abv?: number;             // Alcohol by volume (%)
   dateLogged: string;       // ISO 8601 date string
-  notes?: string;           // Free-text tasting note
-  imagePath?: string;       // Reserved for future image feature — do not expose in UI yet
+  notes: CiderNotes;        // Per-category tasting notes; see spec: notes-and-suggestions.md
+  ratings?: CiderRatings;   // Reserved — not populated or read in v1
+  imagePath?: string;       // Reserved for future image capture — do not expose in UI yet
 }
 ```
 
-Numeric ratings are deferred to a post-v1 release. No `ratings` field is added to the schema now — it will be introduced via a DB migration when the feature is designed. `imagePath` is reserved in the schema to avoid a migration when image capture is added.
+Notes are structured per tasting category to enable targeted suggestions (see §5.1 and [notes-and-suggestions spec](./specs/notes-and-suggestions.md)). Numeric ratings are reserved in the type but carry no data in v1 — the scale is deliberately left unspecified until the rating feature is designed. `imagePath` is likewise reserved to avoid a future migration.
 
 All ciders are stored in a single IndexedDB object store `ciders`, keyed by `id`. Indices on `producer` and `dateLogged` support the overview and filter views.
 
@@ -107,11 +128,11 @@ All ciders are stored in a single IndexedDB object store `ciders`, keyed by `id`
 
 The primary user flow. A form on `/new` with:
 
-- Name and producer text inputs (required; no autocomplete source yet — non-goal for v1)
-- Optional: style (select with common options), vintage (year), ABV
-- Optional: free-text notes field (multi-line, no character limit)
+- Name and producer text inputs (required)
+- Optional metadata: style (select with common options), vintage (year), ABV
+- Five per-category note fields: Utseende, Aroma, Smak, Munnfølelse, Generelt — all optional, each with contextual suggestions drawn from past entries (see [notes-and-suggestions spec](./specs/notes-and-suggestions.md))
 
-No numeric ratings. The form is intentionally minimal. Saving creates a new `Cider` record in IndexedDB and navigates to the detail view.
+No numeric ratings. Saving creates a new `Cider` record in IndexedDB and navigates to the detail view.
 
 ### 5.2 Overview
 
@@ -131,7 +152,12 @@ Available in the app shell / settings panel. Choice persisted to `localStorage`.
 
 ### 5.6 Install prompt (PWA)
 
-When the browser triggers the `beforeinstallprompt` event, show a subtle bottom-sheet: "Legg til Sider på hjemskjermen." Dismissed state is persisted so it doesn't re-appear.
+The app prompts the user to install after they save their first cider — the earliest moment at which the value of offline persistence is obvious. Two distinct flows are required:
+
+- **Chrome / Android:** capture `beforeinstallprompt`, show a bottom sheet, defer to the native browser prompt.
+- **iOS Safari:** no programmatic install API; show a bottom sheet with manual Share → "Legg til på hjemmskjerm" instructions.
+
+Already-installed users (`display-mode: standalone`) and users who have previously dismissed are never prompted. See full details in [pwa-install-prompt spec](./specs/pwa-install-prompt.md).
 
 ### 5.7 In-app browser detection (REQ-01)
 
