@@ -32,7 +32,13 @@
 	let editStyle = $state('');
 	let editVintage = $state('');
 	let editAbv = $state('');
-	let editNotes = $state<CiderNotes>({});
+	let editNotes = $state<CiderNotes>({
+		utseende: '',
+		aroma: '',
+		smak: '',
+		munnfølelse: '',
+		generelt: ''
+	});
 
 	onMount(async () => {
 		const found = await getCiderById(data.id);
@@ -51,7 +57,13 @@
 		editStyle = cider.style ?? '';
 		editVintage = cider.vintage ? String(cider.vintage) : '';
 		editAbv = cider.abv ? String(cider.abv) : '';
-		editNotes = { ...cider.notes };
+		editNotes = {
+			utseende: cider.notes.utseende ?? '',
+			aroma: cider.notes.aroma ?? '',
+			smak: cider.notes.smak ?? '',
+			munnfølelse: cider.notes.munnfølelse ?? '',
+			generelt: cider.notes.generelt ?? ''
+		};
 	}
 
 	function startEdit() {

@@ -12,6 +12,20 @@
 				"uriFormat": "http://localhost:%s",
 				"action": "openExternally"
 			}
+		},
+		{
+			"name": "Dev (vite dev)",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "dev"],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"serverReadyAction": {
+				"pattern": "Local:\\s+http://localhost:([0-9]+)",
+				"uriFormat": "http://localhost:%s",
+				"action": "openExternally"
+			}
 		}
 	]
 }

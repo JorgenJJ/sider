@@ -5,9 +5,9 @@
   "nav.new": "Ny",
   "nav.settings": "Innstillinger",
 
-  "overview.title": "Sideringer",
-  "overview.empty.title": "Ingen sideringer ennå",
-  "overview.empty.description": "Trykk på + for å logge din første sidering",
+  "overview.title": "Sider",
+  "overview.empty.title": "Ingen sider ennå",
+  "overview.empty.description": "Trykk på + for å logge din første sider",
   "overview.filter.all": "Alle produsenter",
   "overview.filter.label": "Filtrer",
 
@@ -48,26 +48,26 @@
 
   "suggestions.label": "Tidligere notater:",
 
-  "action.save": "Lagre sidering",
+  "action.save": "Lagre sider",
   "action.saving": "Lagrer…",
   "action.cancel": "Avbryt",
-  "action.delete": "Slett sidering",
+  "action.delete": "Slett sider",
   "action.edit": "Rediger",
   "action.done": "Ferdig",
   "action.back": "Tilbake",
   "action.confirm": "Bekreft",
   "action.close": "Lukk",
 
-  "confirm.delete.title": "Slett sidering?",
+  "confirm.delete.title": "Slett sider?",
   "confirm.delete.body": "Dette kan ikke angres.",
   "confirm.delete.yes": "Ja, slett",
   "confirm.delete.no": "Avbryt",
 
-  "new.title": "Ny sidering",
-  "new.metadata.section": "Om sideringen",
+  "new.title": "Ny sider",
+  "new.metadata.section": "Om sideren",
   "new.required": "Obligatoriske felt",
 
-  "detail.title": "Sidering",
+  "detail.title": "Sider",
   "detail.logged": "Logget",
   "detail.noNotes": "Ingen smaksnotater",
 
@@ -76,15 +76,15 @@
   "settings.language.nb": "Norsk bokmål",
   "settings.language.nn": "Norsk nynorsk",
   "settings.data.section": "Data",
-  "settings.export": "Eksporter sideringer",
-  "settings.export.description": "Last ned alle sideringer som JSON",
+  "settings.export": "Eksporter sider",
+  "settings.export.description": "Last ned alle sider som JSON",
   "settings.export.button": "Last ned JSON",
-  "settings.import": "Importer sideringer",
-  "settings.import.description": "Gjenopprett fra en JSON-sikkerhetskopi. Eksisterende sideringer overskrives ikke.",
+  "settings.import": "Importer sider",
+  "settings.import.description": "Gjenopprett fra en JSON-sikkerhetskopi. Eksisterende sider overskrives ikke.",
   "settings.import.button": "Velg fil…",
-  "settings.import.success": "Importert {added} nye sideringer ({skipped} hoppet over).",
+  "settings.import.success": "Importert {added} nye sider ({skipped} hoppet over).",
   "settings.import.error": "Kunne ikke lese filen. Sjekk at det er en gyldig Sider-JSON-fil.",
-  "settings.import.empty": "Ingen nye sideringer å importere.",
+  "settings.import.empty": "Ingen nye sider å importere.",
   "settings.about.section": "Om",
   "settings.version": "Versjon {version}",
 
@@ -95,7 +95,7 @@
   "install.ios.instruction": "Trykk på Del-knappen (⬆) nederst i Safari, deretter «Legg til på hjemmskjerm»",
   "install.ios.dismiss": "Forstått",
 
-  "inapp.banner": "Du bruker en innebygd nettleser. Åpne Sider i Safari eller Chrome for å lagre sideringene dine.",
+  "inapp.banner": "Du bruker en innebygd nettleser. Åpne Sider i Safari eller Chrome for å lagre siderene dine.",
   "inapp.open": "Åpne i nettleser",
   "inapp.dismiss": "Lukk"
 }

@@ -23,7 +23,13 @@
 	let style = $state('');
 	let vintage = $state('');
 	let abv = $state('');
-	let notes = $state<CiderNotes>({});
+	let notes = $state<CiderNotes>({
+		utseende: '',
+		aroma: '',
+		smak: '',
+		munnfølelse: '',
+		generelt: ''
+	});
 	let saving = $state(false);
 	let errors = $state<Record<string, string>>({});
 
