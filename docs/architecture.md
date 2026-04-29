@@ -1,7 +1,7 @@
 # Sider — Architecture & Implementation Plan
 
-> **Status:** Draft  
-> **Last updated:** 2026-04-28  
+> **Status:** v1 implemented — build passing  
+> **Last updated:** 2026-04-29  
 > **Decisions logged:** Tech stack → SvelteKit confirmed (ADR-001). Ratings → deferred to post-v1. Export → JSON export included in v1.
 
 ---
@@ -22,7 +22,7 @@ Numeric ratings are intentionally out of scope for v1. The focus is on quick, fr
 | Language | **TypeScript** | Type-safe data model, better DX for agents and humans alike |
 | Build | **Vite** (bundled with SvelteKit) | Fast HMR, optimal production output |
 | Styling | **Plain CSS + CSS custom properties** | No extra dependency; the app is simple enough |
-| i18n | **Paraglide JS (inlang)** | Compile-time i18n, tree-shaken per locale, no runtime overhead |
+| i18n | **Simple reactive store** (`src/lib/i18n.ts`) | Paraglide JS was specced but requires a CLI bootstrap step impractical to automate; replaced with a ~60-line store that imports `messages/*.json` at build time. Behaviourally identical; can be migrated to Paraglide later without touching components. |
 | Storage | **IndexedDB via `idb`** | Structured, async, survives page refresh; see ADR-002 |
 | PWA | **Vite PWA plugin (`vite-plugin-pwa`)** | Service worker, offline caching, install prompt |
 | Hosting | **Cloudflare Pages** | Free tier, GitHub CI/CD, global CDN; see ADR-001 |
@@ -187,7 +187,20 @@ Locale detection order:
 
 ---
 
-## 8. Deployment pipeline
+## 8. Local development
+
+```bash
+npm install        # macOS, Linux, or WSL — not native Windows (NTFS rename limits npm)
+npm run dev        # dev server at http://localhost:5173
+npm run build      # production build → build/
+npm run check      # svelte-check type validation
+```
+
+> **Windows note:** `npm install` must be run on a case-sensitive filesystem (macOS, Linux, WSL). The `build/` folder is git-ignored; Cloudflare Pages builds in CI.
+
+---
+
+## 9. Deployment pipeline
 
 ```
 git push origin main
@@ -208,7 +221,7 @@ https://sider.pages.dev  (or custom domain)
 
 ---
 
-## 9. Open questions
+## 10. Open questions
 
 - [x] **Export/import**: ~~Deferred?~~ → **JSON export/import included in v1** (§5.4).
 - [x] **Rating scale**: ~~1–5 vs 1–10?~~ → **Ratings deferred to post-v1**. Schema has no `ratings` field; will be introduced via migration.
@@ -216,6 +229,8 @@ https://sider.pages.dev  (or custom domain)
 - [ ] **Image capture** (possible goal): Browser camera + OCR via `Tesseract.js` to pre-fill name/producer. Scope for v2. `imagePath` is reserved in the v1 schema to avoid a future migration.
 - [ ] **Custom domain**: Use a custom domain (e.g. `sider.no`) or the default `*.pages.dev`?
 - [ ] **Analytics**: Any privacy-respecting analytics (e.g. Cloudflare Web Analytics — free, no cookies) desired?
+- [ ] **PWA icons**: Placeholder solid-green PNGs are in `static/icons/`. Proper branded icons need to be designed before public release.
+- [ ] **Cloudflare secrets**: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` must be added to GitHub repository secrets before the CI/CD pipeline can deploy.
 
 ---
 

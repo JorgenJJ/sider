@@ -1,0 +1,17 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Serve (local test)",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/serve.mjs",
+			"console": "integratedTerminal",
+			"serverReadyAction": {
+				"pattern": "Local:\\s+http://localhost:([0-9]+)",
+				"uriFormat": "http://localhost:%s",
+				"action": "openExternally"
+			}
+		}
+	]
+}
