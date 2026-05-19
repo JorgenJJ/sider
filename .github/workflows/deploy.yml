@@ -31,12 +31,11 @@ jobs:
         run: npm run build
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: sider
-          directory: build
+          # github.head_ref is set on pull_request events (source branch name);
+          # github.ref_name is used for push and workflow_dispatch.
+          command: pages deploy build --project-name=sider --branch=${{ github.head_ref || github.ref_name }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          # Pull requests get preview deployments; main gets production
-          branch: ${{ github.ref_name }}
