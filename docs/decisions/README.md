@@ -11,6 +11,7 @@ Use ADRs when a decision is hard to reverse, involves real trade-offs, or would 
 | [001](./001-tech-stack.md) | Tech stack: SvelteKit + Cloudflare Pages | Accepted |
 | [002](./002-offline-storage.md) | Offline storage: IndexedDB via `idb` | Accepted |
 | [003](./003-notes-structure.md) | Notes structure: per-category fields over single free text | Accepted |
+| [004](./004-deploy-via-cloudflare-git-integration.md) | Deploy via Cloudflare's native Git integration (not GitHub Actions) | Accepted |
 
 ## How to add a new ADR
 
