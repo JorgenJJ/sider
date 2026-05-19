@@ -145,5 +145,8 @@ vite.config.ts.timestamp-*
 # SvelteKit build output
 build/
 
+# Wrangler cache (local Cloudflare CLI state)
+.wrangler/
+
 # Test directory node_modules (installed in /tmp for Linux sandbox compatibility)
 # Run: npm install (on macOS/Linux/WSL)
