@@ -1,9 +1,15 @@
 # Spec: Per-category tasting notes with suggestions
 
-> **Status:** Ready for implementation  
-> **Author:** Jørgen  
-> **Created:** 2026-04-28  
-> **Last updated:** 2026-04-28
+> **Status:** Superseded — see [simplified-registration](./simplified-registration.md)
+> **Author:** Jørgen
+> **Created:** 2026-04-28
+> **Last updated:** 2026-05-19
+
+> The per-category text fields and suggestion-chips described below were
+> replaced 2026-05-19 by a chip-based selection model. Existing records with
+> the old `notes: CiderNotes` shape are still readable in the detail view
+> (`src/routes/cider/[id]/+page.svelte`); new entries write the simplified
+> fields described in [simplified-registration](./simplified-registration.md).
 
 ---
 

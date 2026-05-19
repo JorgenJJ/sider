@@ -3,22 +3,25 @@
 	import { goto } from '$app/navigation';
 	import { t } from '$lib/i18n';
 	import { getCiderById, saveCider, deleteCider } from '$lib/db/ciders';
-	import NoteField from '$lib/components/NoteField.svelte';
-	import type { Cider, CiderNotes } from '$lib/db/schema';
+	import ChipGroup from '$lib/components/ChipGroup.svelte';
+	import {
+		SWEETNESS_KEYS,
+		CARBONATION_KEYS,
+		TYPE_KEYS,
+		APPEARANCE_KEYS,
+		AROMA_KEYS,
+		FLAVOR_KEYS,
+		type Cider,
+		type SweetnessKey,
+		type CarbonationKey,
+		type CiderTypeKey,
+		type AppearanceKey,
+		type AromaKey,
+		type FlavorKey,
+		type NoteCategory
+	} from '$lib/db/schema';
 
 	let { data } = $props<{ data: { id: string } }>();
-
-	const STYLES = [
-		'style.dry',
-		'style.semidry',
-		'style.semisweet',
-		'style.sweet',
-		'style.rose',
-		'style.sparkling',
-		'style.still',
-		'style.ice',
-		'style.pear'
-	];
 
 	let cider = $state<Cider | null>(null);
 	let editing = $state(false);
@@ -26,19 +29,37 @@
 	let confirmDelete = $state(false);
 	let notFound = $state(false);
 
-	// Editable copies
 	let editName = $state('');
 	let editProducer = $state('');
-	let editStyle = $state('');
+	let editSweetness = $state<SweetnessKey | undefined>(undefined);
+	let editCarbonation = $state<CarbonationKey | undefined>(undefined);
+	let editType = $state<CiderTypeKey | undefined>(undefined);
+	let editAppearance = $state<AppearanceKey[]>([]);
+	let editAroma = $state<AromaKey[]>([]);
+	let editFlavor = $state<FlavorKey[]>([]);
 	let editVintage = $state('');
 	let editAbv = $state('');
-	let editNotes = $state<CiderNotes>({
-		utseende: '',
-		aroma: '',
-		smak: '',
-		munnfølelse: '',
-		generelt: ''
-	});
+	let editComment = $state('');
+	let showMore = $state(false);
+
+	let sweetnessOptions = $derived(SWEETNESS_KEYS.map((k) => ({ key: k, label: $t(`sweetness.${k}`) })));
+	let carbonationOptions = $derived(
+		CARBONATION_KEYS.map((k) => ({ key: k, label: $t(`carbonation.${k}`) }))
+	);
+	let typeOptions = $derived(TYPE_KEYS.map((k) => ({ key: k, label: $t(`type.${k}`) })));
+	let appearanceOptions = $derived(
+		APPEARANCE_KEYS.map((k) => ({ key: k, label: $t(`appearance.${k}`) }))
+	);
+	let aromaOptions = $derived(AROMA_KEYS.map((k) => ({ key: k, label: $t(`aroma.${k}`) })));
+	let flavorOptions = $derived(FLAVOR_KEYS.map((k) => ({ key: k, label: $t(`flavor.${k}`) })));
+
+	const LEGACY_NOTE_CATEGORIES: NoteCategory[] = [
+		'utseende',
+		'aroma',
+		'smak',
+		'munnfølelse',
+		'generelt'
+	];
 
 	onMount(async () => {
 		const found = await getCiderById(data.id);
@@ -54,16 +75,16 @@
 		if (!cider) return;
 		editName = cider.name;
 		editProducer = cider.producer;
-		editStyle = cider.style ?? '';
+		editSweetness = cider.sweetness;
+		editCarbonation = cider.carbonation;
+		editType = cider.type;
+		editAppearance = cider.appearance ? [...cider.appearance] : [];
+		editAroma = cider.aroma ? [...cider.aroma] : [];
+		editFlavor = cider.flavor ? [...cider.flavor] : [];
 		editVintage = cider.vintage ? String(cider.vintage) : '';
 		editAbv = cider.abv ? String(cider.abv) : '';
-		editNotes = {
-			utseende: cider.notes.utseende ?? '',
-			aroma: cider.notes.aroma ?? '',
-			smak: cider.notes.smak ?? '',
-			munnfølelse: cider.notes.munnfølelse ?? '',
-			generelt: cider.notes.generelt ?? ''
-		};
+		editComment = cider.comment ?? '';
+		showMore = Boolean(editVintage || editAbv || editComment);
 	}
 
 	function startEdit() {
@@ -79,13 +100,18 @@
 		if (!cider) return;
 		saving = true;
 		const updated: Cider = {
-			...cider,
+			...$state.snapshot(cider),
 			name: editName.trim() || cider.name,
 			producer: editProducer.trim() || cider.producer,
-			style: editStyle || undefined,
+			sweetness: editSweetness,
+			carbonation: editCarbonation,
+			type: editType,
+			appearance: editAppearance.length ? $state.snapshot(editAppearance) : undefined,
+			aroma: editAroma.length ? $state.snapshot(editAroma) : undefined,
+			flavor: editFlavor.length ? $state.snapshot(editFlavor) : undefined,
 			vintage: editVintage ? parseInt(editVintage) : undefined,
 			abv: editAbv ? parseFloat(editAbv) : undefined,
-			notes: editNotes
+			comment: editComment.trim() || undefined
 		};
 		await saveCider(updated);
 		cider = updated;
@@ -107,13 +133,18 @@
 		});
 	}
 
-	const NOTE_CATEGORIES: Array<keyof CiderNotes> = [
-		'utseende',
-		'aroma',
-		'smak',
-		'munnfølelse',
-		'generelt'
-	];
+	function chipLabels(keys: readonly string[] | undefined, group: string): string {
+		if (!keys || keys.length === 0) return '';
+		return keys.map((k) => $t(`${group}.${k}`)).join(', ');
+	}
+
+	let hasAnyNotes = $derived.by(() => {
+		if (!cider) return false;
+		if (cider.appearance?.length || cider.aroma?.length || cider.flavor?.length) return true;
+		if (cider.comment) return true;
+		if (cider.notes && LEGACY_NOTE_CATEGORIES.some((c) => cider!.notes?.[c])) return true;
+		return false;
+	});
 </script>
 
 <svelte:head>
@@ -139,50 +170,74 @@
 		{:else if !cider}
 			<div class="loading-state"></div>
 		{:else if editing}
-			<!-- Edit mode -->
 			<form onsubmit={(e) => { e.preventDefault(); saveEdit(); }}>
-				<section class="form-section">
-					<div class="form-group">
-						<label for="edit-name">{$t('cider.name')}</label>
-						<input id="edit-name" type="text" bind:value={editName} />
-					</div>
-					<div class="form-group">
-						<label for="edit-producer">{$t('cider.producer')}</label>
-						<input id="edit-producer" type="text" bind:value={editProducer} />
-					</div>
-					<div class="form-group">
-						<label for="edit-style">{$t('cider.style')}</label>
-						<select id="edit-style" bind:value={editStyle}>
-							<option value="">{$t('cider.style.placeholder')}</option>
-							{#each STYLES as key}
-								<option value={$t(key)}>{$t(key)}</option>
-							{/each}
-						</select>
-					</div>
-					<div class="form-row">
-						<div class="form-group">
-							<label for="edit-vintage">{$t('cider.vintage')}</label>
-							<input id="edit-vintage" type="number" bind:value={editVintage} />
+				<div class="form-group">
+					<label for="edit-name">{$t('cider.name')}</label>
+					<input id="edit-name" type="text" bind:value={editName} />
+				</div>
+				<div class="form-group">
+					<label for="edit-producer">{$t('cider.producer')}</label>
+					<input id="edit-producer" type="text" bind:value={editProducer} />
+				</div>
+
+				<ChipGroup
+					label={$t('cider.sweetness')}
+					options={sweetnessOptions}
+					bind:value={editSweetness}
+				/>
+				<ChipGroup
+					label={$t('cider.carbonation')}
+					options={carbonationOptions}
+					bind:value={editCarbonation}
+				/>
+				<ChipGroup label={$t('cider.type')} options={typeOptions} bind:value={editType} />
+				<ChipGroup
+					label={$t('cider.appearance')}
+					options={appearanceOptions}
+					bind:value={editAppearance}
+					multi
+				/>
+				<ChipGroup
+					label={$t('cider.aroma')}
+					options={aromaOptions}
+					bind:value={editAroma}
+					multi
+				/>
+				<ChipGroup
+					label={$t('cider.flavor')}
+					options={flavorOptions}
+					bind:value={editFlavor}
+					multi
+				/>
+
+				<button
+					type="button"
+					class="more-toggle"
+					aria-expanded={showMore}
+					onclick={() => (showMore = !showMore)}
+				>
+					<span class="caret" class:open={showMore}>▸</span>
+					{$t('action.more')}
+				</button>
+
+				{#if showMore}
+					<div class="more-panel">
+						<div class="form-row">
+							<div class="form-group">
+								<label for="edit-vintage">{$t('cider.vintage')}</label>
+								<input id="edit-vintage" type="number" bind:value={editVintage} />
+							</div>
+							<div class="form-group">
+								<label for="edit-abv">{$t('cider.abv')}</label>
+								<input id="edit-abv" type="number" step="0.1" bind:value={editAbv} />
+							</div>
 						</div>
 						<div class="form-group">
-							<label for="edit-abv">{$t('cider.abv')}</label>
-							<input id="edit-abv" type="number" step="0.1" bind:value={editAbv} />
+							<label for="edit-comment">{$t('cider.comment')}</label>
+							<textarea id="edit-comment" rows="3" bind:value={editComment}></textarea>
 						</div>
 					</div>
-				</section>
-
-				<div class="divider"></div>
-
-				<section class="form-section">
-					{#each NOTE_CATEGORIES as cat}
-						<NoteField
-							category={cat}
-							label={$t(`notes.${cat}`)}
-							hint={$t(`hint.${cat}`)}
-							bind:value={editNotes[cat]}
-						/>
-					{/each}
-				</section>
+				{/if}
 
 				<div class="form-actions">
 					<button type="submit" class="btn btn-primary btn-full" disabled={saving}>
@@ -191,21 +246,42 @@
 					<button type="button" class="btn btn-ghost btn-full" onclick={cancelEdit}>
 						{$t('action.cancel')}
 					</button>
-					<button type="button" class="btn btn-danger btn-full" onclick={() => (confirmDelete = true)}>
+					<button
+						type="button"
+						class="btn btn-danger btn-full"
+						onclick={() => (confirmDelete = true)}
+					>
 						{$t('action.delete')}
 					</button>
 				</div>
 			</form>
 		{:else}
-			<!-- Read mode -->
 			<div class="detail-meta card">
 				<div class="meta-row">
 					<span class="meta-label">{$t('cider.producer')}</span>
 					<span class="meta-value">{cider.producer}</span>
 				</div>
-				{#if cider.style}
+				{#if cider.sweetness}
 					<div class="meta-row">
-						<span class="meta-label">{$t('cider.style')}</span>
+						<span class="meta-label">{$t('cider.sweetness')}</span>
+						<span class="meta-value">{$t(`sweetness.${cider.sweetness}`)}</span>
+					</div>
+				{/if}
+				{#if cider.carbonation}
+					<div class="meta-row">
+						<span class="meta-label">{$t('cider.carbonation')}</span>
+						<span class="meta-value">{$t(`carbonation.${cider.carbonation}`)}</span>
+					</div>
+				{/if}
+				{#if cider.type}
+					<div class="meta-row">
+						<span class="meta-label">{$t('cider.type')}</span>
+						<span class="meta-value">{$t(`type.${cider.type}`)}</span>
+					</div>
+				{/if}
+				{#if cider.style && !cider.sweetness && !cider.carbonation && !cider.type}
+					<div class="meta-row">
+						<span class="meta-label">Stil</span>
 						<span class="meta-value">{cider.style}</span>
 					</div>
 				{/if}
@@ -228,15 +304,41 @@
 			</div>
 
 			<div class="notes-section">
-				{#each NOTE_CATEGORIES as cat}
-					{#if cider.notes[cat]}
-						<div class="note-block">
-							<h3 class="note-cat-label">{$t(`notes.${cat}`)}</h3>
-							<p class="note-text">{cider.notes[cat]}</p>
-						</div>
-					{/if}
-				{/each}
-				{#if !NOTE_CATEGORIES.some((c) => cider?.notes[c])}
+				{#if cider.appearance?.length}
+					<div class="note-block">
+						<h3 class="note-cat-label">{$t('cider.appearance')}</h3>
+						<p class="note-text">{chipLabels(cider.appearance, 'appearance')}</p>
+					</div>
+				{/if}
+				{#if cider.aroma?.length}
+					<div class="note-block">
+						<h3 class="note-cat-label">{$t('cider.aroma')}</h3>
+						<p class="note-text">{chipLabels(cider.aroma, 'aroma')}</p>
+					</div>
+				{/if}
+				{#if cider.flavor?.length}
+					<div class="note-block">
+						<h3 class="note-cat-label">{$t('cider.flavor')}</h3>
+						<p class="note-text">{chipLabels(cider.flavor, 'flavor')}</p>
+					</div>
+				{/if}
+				{#if cider.comment}
+					<div class="note-block">
+						<h3 class="note-cat-label">{$t('cider.comment')}</h3>
+						<p class="note-text">{cider.comment}</p>
+					</div>
+				{/if}
+				{#if cider.notes}
+					{#each LEGACY_NOTE_CATEGORIES as cat}
+						{#if cider.notes[cat]}
+							<div class="note-block">
+								<h3 class="note-cat-label">{cat}</h3>
+								<p class="note-text">{cider.notes[cat]}</p>
+							</div>
+						{/if}
+					{/each}
+				{/if}
+				{#if !hasAnyNotes}
 					<p class="no-notes">{$t('detail.noNotes')}</p>
 				{/if}
 			</div>
@@ -244,7 +346,6 @@
 	</div>
 </div>
 
-<!-- Delete confirmation -->
 {#if confirmDelete}
 	<div class="backdrop" onclick={() => (confirmDelete = false)} role="presentation"></div>
 	<div class="confirm-sheet" role="dialog" aria-modal="true">
@@ -336,7 +437,6 @@
 		padding: var(--spacing-xl) 0;
 	}
 
-	/* Read mode */
 	.detail-meta {
 		display: flex;
 		flex-direction: column;
@@ -398,17 +498,24 @@
 		font-style: italic;
 	}
 
-	/* Edit mode */
 	form {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-lg);
+		gap: 12px;
 	}
 
-	.form-section {
+	.form-group {
 		display: flex;
 		flex-direction: column;
-		gap: var(--spacing-md);
+		gap: 2px;
+	}
+
+	.form-group label {
+		font-size: 0.78rem;
+		font-weight: 600;
+		color: var(--color-text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
 	}
 
 	.form-row {
@@ -417,19 +524,44 @@
 		gap: var(--spacing-md);
 	}
 
-	.divider {
-		height: 1px;
-		background: var(--color-border);
+	.more-toggle {
+		align-self: flex-start;
+		background: none;
+		border: none;
+		color: var(--color-primary);
+		font-size: 0.85rem;
+		font-weight: 600;
+		cursor: pointer;
+		padding: 4px 0;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.caret {
+		display: inline-block;
+		transition: transform 0.15s;
+	}
+
+	.caret.open {
+		transform: rotate(90deg);
+	}
+
+	.more-panel {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
 	}
 
 	.form-actions {
 		display: flex;
 		flex-direction: column;
 		gap: var(--spacing-sm);
+		padding-top: var(--spacing-md);
 		padding-bottom: var(--spacing-lg);
 	}
 
-	/* Delete confirmation sheet */
 	.backdrop {
 		position: fixed;
 		inset: 0;
