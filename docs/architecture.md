@@ -1,8 +1,8 @@
 # Sider — Architecture & Implementation Plan
 
 > **Status:** v1 implemented — build passing  
-> **Last updated:** 2026-04-29  
-> **Decisions logged:** Tech stack → SvelteKit confirmed (ADR-001). Ratings → deferred to post-v1. Export → JSON export included in v1.
+> **Last updated:** 2026-05-19  
+> **Decisions logged:** Tech stack → SvelteKit confirmed (ADR-001). Ratings → deferred to post-v1. Export → JSON export included in v1. Registration simplified to single-screen chip flow ([simplified-registration spec](./specs/simplified-registration.md)).
 
 ---
 
@@ -82,17 +82,22 @@ sider/
 ## 4. Data model
 
 ```typescript
+// Sensory chip keys live in src/lib/db/schema.ts (APPEARANCE_KEYS, AROMA_KEYS, FLAVOR_KEYS).
+type SweetnessKey = 'dry' | 'semidry' | 'semisweet' | 'sweet';
+type CarbonationKey = 'still' | 'sparkling';
+type CiderTypeKey = 'apple' | 'pear' | 'ice' | 'rose' | 'other';
+
+// Legacy v1 per-category notes — kept for backwards-compatible reads only.
 interface CiderNotes {
-  utseende?: string;      // Look — colour, clarity, carbonation
-  aroma?: string;         // Smell — fruit, earth, off-notes
-  smak?: string;          // Taste — sweetness, acidity, bitterness, fruit character
-  munnfølelse?: string;   // Mouthfeel — body, carbonation, finish length
-  generelt?: string;      // General impressions / free overflow
+  utseende?: string;
+  aroma?: string;
+  smak?: string;
+  munnfølelse?: string;
+  generelt?: string;
 }
 
 // ── Reserved for future rating feature — NOT exposed in v1 UI ──────────────
 // Scale is intentionally unspecified; do not assume 1–5.
-// Introduce via a DB version bump when the rating feature is designed.
 interface CiderRatings {
   utseende?: number;
   aroma?: number;
@@ -103,22 +108,35 @@ interface CiderRatings {
 // ────────────────────────────────────────────────────────────────────────────
 
 interface Cider {
-  id: string;               // crypto.randomUUID()
-  name: string;             // Cider product name
-  producer: string;         // Producer / brewery name
-  style?: string;           // e.g. "Tørr", "Halvtørr", "Søt", "Rosé"
-  vintage?: number;         // Production year
-  abv?: number;             // Alcohol by volume (%)
-  dateLogged: string;       // ISO 8601 date string
-  notes: CiderNotes;        // Per-category tasting notes; see spec: notes-and-suggestions.md
-  ratings?: CiderRatings;   // Reserved — not populated or read in v1
-  imagePath?: string;       // Reserved for future image capture — do not expose in UI yet
+  id: string;
+  name: string;
+  producer: string;
+  dateLogged: string;
+  // Independent style axes (v2):
+  sweetness?: SweetnessKey;
+  carbonation?: CarbonationKey;
+  type?: CiderTypeKey;
+  // Sensory chips (multi-select keys):
+  appearance?: AppearanceKey[];
+  aroma?: AromaKey[];
+  flavor?: FlavorKey[];
+  // Single free-text note (replaces the five-category notes object):
+  comment?: string;
+  // Optional metadata:
+  vintage?: number;
+  abv?: number;
+  // Legacy fields, still readable but no longer written:
+  style?: string;
+  notes?: CiderNotes;
+  // Reserved:
+  ratings?: CiderRatings;
+  imagePath?: string;
 }
 ```
 
-Notes are structured per tasting category to enable targeted suggestions (see §5.1 and [notes-and-suggestions spec](./specs/notes-and-suggestions.md)). Numeric ratings are reserved in the type but carry no data in v1 — the scale is deliberately left unspecified until the rating feature is designed. `imagePath` is likewise reserved to avoid a future migration.
+«Stil» er splittet i tre uavhengige akser (sødme, kullsyre, type) for å unngå konflikten der en sider kan være både «Tørr» og «Stille» samtidig. Sanseinntrykk lagres som chip-nøkler heller enn fri tekst, slik at registreringen kan skje på én skjerm uten å skrolle ([simplified-registration spec](./specs/simplified-registration.md)). Numeric ratings are reserved in the type but carry no data in v1 — the scale is deliberately left unspecified until the rating feature is designed. `imagePath` is likewise reserved to avoid a future migration.
 
-All ciders are stored in a single IndexedDB object store `ciders`, keyed by `id`. Indices on `producer` and `dateLogged` support the overview and filter views.
+All ciders are stored in a single IndexedDB object store `ciders`, keyed by `id`. Indices on `producer` and `dateLogged` support the overview and filter views. Skjemaet ble bumpet fra v1 → v2 additivt (ingen destruktiv migrering); gamle felter (`style`, `notes`) leses fortsatt fra eldre poster i detaljvisningen.
 
 ---
 
@@ -126,13 +144,16 @@ All ciders are stored in a single IndexedDB object store `ciders`, keyed by `id`
 
 ### 5.1 Log a cider
 
-The primary user flow. A form on `/new` with:
+The primary user flow. A single-screen form on `/new` with chip-based input — see [simplified-registration spec](./specs/simplified-registration.md):
 
-- Name and producer text inputs (required)
-- Optional metadata: style (select with common options), vintage (year), ABV
-- Five per-category note fields: Utseende, Aroma, Smak, Munnfølelse, Generelt — all optional, each with contextual suggestions drawn from past entries (see [notes-and-suggestions spec](./specs/notes-and-suggestions.md))
+- Name and producer text inputs (required).
+- Three single-select chip rows: sødme (Tørr/Halvtørr/Halvsøt/Søt), kullsyre (Stille/Musserende), type (i `Mer info`).
+- Three multi-select chip rows for sanseinntrykk: utseende, lukt, smak.
+- `Mer info` skjuler type, årgang, ABV og en valgfri fritekstboks.
 
-No numeric ratings. Saving creates a new `Cider` record in IndexedDB and navigates to the detail view.
+The previous [notes-and-suggestions spec](./specs/notes-and-suggestions.md) is superseded by this design — suggestion chips drawn from past notes were removed in favour of a fixed common set. Eldre poster lagret med per-kategori notater leses fortsatt i detaljvisningen.
+
+No numeric ratings. Saving creates a new `Cider` record in IndexedDB and navigates to the overview.
 
 ### 5.2 Overview
 

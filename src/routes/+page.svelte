@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { afterNavigate } from '$app/navigation';
 	import { goto } from '$app/navigation';
-	import { t } from '$lib/i18n';
+	import { t, translate } from '$lib/i18n';
 	import { getAllCiders, getProducers } from '$lib/db/ciders';
 	import type { Cider } from '$lib/db/schema';
 
@@ -32,9 +32,22 @@
 		});
 	}
 
+	function cardMeta(c: Cider): string {
+		const parts: string[] = [];
+		if (c.sweetness) parts.push(translate(`sweetness.${c.sweetness}`));
+		if (c.carbonation) parts.push(translate(`carbonation.${c.carbonation}`));
+		if (c.type && c.type !== 'apple') parts.push(translate(`type.${c.type}`));
+		if (c.vintage) parts.push(String(c.vintage));
+		if (parts.length === 0 && c.style) parts.push(c.style);
+		return parts.join(' · ');
+	}
+
 	function notePreview(c: Cider): string {
-		const parts = [c.notes.aroma, c.notes.smak, c.notes.generelt].filter(Boolean);
-		const joined = parts.join(' · ');
+		const chips: string[] = [];
+		if (c.aroma?.length) chips.push(...c.aroma.map((k) => translate(`aroma.${k}`)));
+		if (c.flavor?.length) chips.push(...c.flavor.map((k) => translate(`flavor.${k}`)));
+		const text = c.comment ?? c.notes?.aroma ?? c.notes?.smak ?? c.notes?.generelt ?? '';
+		const joined = [chips.join(', '), text].filter(Boolean).join(' · ');
 		return joined.length > 80 ? joined.slice(0, 77) + '…' : joined;
 	}
 </script>
@@ -80,10 +93,8 @@
 								<div class="card-info">
 									<span class="cider-name">{cider.name}</span>
 									<span class="cider-producer">{cider.producer}</span>
-									{#if cider.style}
-										<span class="cider-meta"
-											>{cider.style}{cider.vintage ? ` · ${cider.vintage}` : ''}</span
-										>
+									{#if cardMeta(cider)}
+										<span class="cider-meta">{cardMeta(cider)}</span>
 									{/if}
 								</div>
 								<span class="cider-date">{formatDate(cider.dateLogged)}</span>
