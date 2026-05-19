@@ -1,7 +1,7 @@
-# ADR-001 — Tech stack: SvelteKit + Cloudflare Pages
+# ADR-001 — Tech stack: SvelteKit + Cloudflare
 
-> **Status:** Accepted  
-> **Date:** 2026-04-28  
+> **Status:** Accepted (hosting primitive narrowed to Workers Static Assets in [ADR-005](./005-workers-static-assets-over-pages.md))
+> **Date:** 2026-04-28
 > **Deciders:** Jørgen
 
 ---
@@ -58,7 +58,9 @@ The framework choice influences bundle size, routing, i18n ergonomics, and PWA t
 
 ## Decision
 
-**SvelteKit** with `@sveltejs/adapter-static`, deployed to **Cloudflare Pages** via GitHub integration. TypeScript throughout. Styling via plain CSS with CSS custom properties (no additional CSS framework dependency).
+**SvelteKit** with `@sveltejs/adapter-static`, deployed to **Cloudflare** via GitHub integration. TypeScript throughout. Styling via plain CSS with CSS custom properties (no additional CSS framework dependency).
+
+> **Update (2026-05-19):** The specific Cloudflare product is **Workers Static Assets**, not Cloudflare Pages. See [ADR-005](./005-workers-static-assets-over-pages.md). Behaviour (static file hosting, global CDN, free tier, Git-triggered deploys) is unchanged.
 
 ## Consequences
 

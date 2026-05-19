@@ -25,8 +25,8 @@ Numeric ratings are intentionally out of scope for v1. The focus is on quick, fr
 | i18n | **Simple reactive store** (`src/lib/i18n.ts`) | Paraglide JS was specced but requires a CLI bootstrap step impractical to automate; replaced with a ~60-line store that imports `messages/*.json` at build time. Behaviourally identical; can be migrated to Paraglide later without touching components. |
 | Storage | **IndexedDB via `idb`** | Structured, async, survives page refresh; see ADR-002 |
 | PWA | **Vite PWA plugin (`vite-plugin-pwa`)** | Service worker, offline caching, install prompt |
-| Hosting | **Cloudflare Pages** | Free tier, GitHub CI/CD, global CDN; see ADR-001 |
-| CI/CD | **GitHub Actions → Cloudflare Pages** | Automatic deploy on push to `main` |
+| Hosting | **Cloudflare Workers Static Assets** | Free tier, global CDN, modern Cloudflare static-site primitive; see ADR-005 (supersedes ADR-001's "Pages" wording) |
+| CI/CD | **Cloudflare Workers Builds (native Git integration)** | Cloudflare watches the GitHub repo, builds and deploys on every push; see ADR-004 |
 
 See [ADR-001](./decisions/001-tech-stack.md) and [ADR-002](./decisions/002-offline-storage.md) for full decision rationale and rejected alternatives.
 
@@ -206,17 +206,24 @@ npm run check      # svelte-check type validation
 git push origin main
         │
         ▼
-GitHub Actions (lint + type-check + build)
+Cloudflare Workers Builds (native Git integration)
+  ├─ npm ci
+  ├─ npm run build           → build/
+  └─ wrangler versions upload → reads wrangler.jsonc, uploads build/ as assets
         │
         ▼
-Cloudflare Pages (automatic deploy from GH integration)
-        │
-        ▼
-https://sider.pages.dev  (or custom domain)
+https://sider.<account>.workers.dev  (or custom domain)
 ```
 
-- Preview deployments are created automatically for pull requests.
-- No server-side rendering in production; output is a fully static SPA.
+- The Cloudflare Worker `sider` is connected to the GitHub repo via Cloudflare's native Git integration. There is no GitHub Actions workflow — Cloudflare handles checkout, install, build, and deploy on its own runners. See [ADR-004](./decisions/004-deploy-via-cloudflare-git-integration.md) for that pipeline choice and [ADR-005](./decisions/005-workers-static-assets-over-pages.md) for the choice of Workers Static Assets over Cloudflare Pages.
+- Build configuration (set in the Cloudflare dashboard → project Settings → Build):
+  - Build command: `npm run build`
+  - Deploy command: `npx wrangler versions upload` (default for Workers projects; reads `wrangler.jsonc`)
+  - Root directory: `/`
+- Static-asset configuration lives in [`wrangler.jsonc`](../wrangler.jsonc) at the repo root: assets are served from `./build`, and `not_found_handling: "single-page-application"` makes any unknown path serve `index.html` so client-side routing works.
+- Preview deployments are created automatically for pull requests as Workers preview URLs.
+- The Workers Build uses an internal build token managed by Cloudflare (project Settings → Build configuration → Build token). It is **not** the same as a user-generated API token, and it is not stored in this repo or in GitHub secrets.
+- No server-side code in production; the Worker only serves static assets — equivalent in behaviour to the original Cloudflare Pages plan.
 - `svelte.config.js` uses `@sveltejs/adapter-static`.
 
 ---
@@ -230,7 +237,7 @@ https://sider.pages.dev  (or custom domain)
 - [ ] **Custom domain**: Use a custom domain (e.g. `sider.no`) or the default `*.pages.dev`?
 - [ ] **Analytics**: Any privacy-respecting analytics (e.g. Cloudflare Web Analytics — free, no cookies) desired?
 - [ ] **PWA icons**: Placeholder solid-green PNGs are in `static/icons/`. Proper branded icons need to be designed before public release.
-- [ ] **Cloudflare secrets**: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` must be added to GitHub repository secrets before the CI/CD pipeline can deploy.
+- [x] **Cloudflare secrets**: ~~`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` must be added to GitHub repository secrets before the CI/CD pipeline can deploy.~~ → **No longer applicable** (2026-05-19). The deploy now uses Cloudflare's native Git integration (see ADR-004); no GitHub secrets are required.
 
 ---
 
