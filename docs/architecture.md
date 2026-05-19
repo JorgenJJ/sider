@@ -216,6 +216,7 @@ https://sider.pages.dev  (or custom domain)
 ```
 
 - Preview deployments are created automatically for pull requests.
+- The workflow also exposes a manual `workflow_dispatch` trigger so it can be run on demand from the Actions tab.
 - No server-side rendering in production; output is a fully static SPA.
 - `svelte.config.js` uses `@sveltejs/adapter-static`.
 
@@ -230,7 +231,7 @@ https://sider.pages.dev  (or custom domain)
 - [ ] **Custom domain**: Use a custom domain (e.g. `sider.no`) or the default `*.pages.dev`?
 - [ ] **Analytics**: Any privacy-respecting analytics (e.g. Cloudflare Web Analytics — free, no cookies) desired?
 - [ ] **PWA icons**: Placeholder solid-green PNGs are in `static/icons/`. Proper branded icons need to be designed before public release.
-- [ ] **Cloudflare secrets**: `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` must be added to GitHub repository secrets before the CI/CD pipeline can deploy.
+- [x] **Cloudflare secrets**: ~~`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` must be added to GitHub repository secrets before the CI/CD pipeline can deploy.~~ → **Configured** in GitHub Actions secrets (2026-05-19).
 
 ---
 
