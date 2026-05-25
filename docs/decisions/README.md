@@ -10,9 +10,10 @@ Use ADRs when a decision is hard to reverse, involves real trade-offs, or would 
 |---|-------|--------|
 | [001](./001-tech-stack.md) | Tech stack: SvelteKit + Cloudflare | Accepted (hosting narrowed by ADR-005) |
 | [002](./002-offline-storage.md) | Offline storage: IndexedDB via `idb` | Accepted |
-| [003](./003-notes-structure.md) | Notes structure: per-category fields over single free text | Accepted |
+| [003](./003-notes-structure.md) | Notes structure: per-category fields over single free text | Accepted (extended by ADR-006) |
 | [004](./004-deploy-via-cloudflare-git-integration.md) | Deploy via Cloudflare's native Git integration (not GitHub Actions) | Accepted |
 | [005](./005-workers-static-assets-over-pages.md) | Cloudflare Workers Static Assets over Cloudflare Pages | Accepted |
+| [006](./006-tasting-wheel-sensory-model.md) | Tasting-wheel sensory model (grouped aromas + HURTIGANALYSE axes) | Accepted |
 
 ## How to add a new ADR
 

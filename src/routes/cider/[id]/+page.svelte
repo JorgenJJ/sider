@@ -4,20 +4,28 @@
 	import { t } from '$lib/i18n';
 	import { getCiderById, saveCider, deleteCider } from '$lib/db/ciders';
 	import ChipGroup from '$lib/components/ChipGroup.svelte';
+	import AromaPicker from '$lib/components/AromaPicker.svelte';
 	import {
 		SWEETNESS_KEYS,
 		CARBONATION_KEYS,
 		TYPE_KEYS,
-		APPEARANCE_KEYS,
-		AROMA_KEYS,
-		FLAVOR_KEYS,
+		COLOR_KEYS,
+		CLARITY_KEYS,
+		STRUCTURE_KEYS,
+		FAULT_KEYS,
+		AROMA_GROUPS,
+		normalizeCarbonation,
+		colorFromAppearance,
+		clarityFromAppearance,
 		type Cider,
 		type SweetnessKey,
 		type CarbonationKey,
 		type CiderTypeKey,
-		type AppearanceKey,
+		type ColorKey,
+		type ClarityKey,
+		type StructureKey,
+		type FaultKey,
 		type AromaKey,
-		type FlavorKey,
 		type NoteCategory
 	} from '$lib/db/schema';
 
@@ -34,9 +42,11 @@
 	let editSweetness = $state<SweetnessKey | undefined>(undefined);
 	let editCarbonation = $state<CarbonationKey | undefined>(undefined);
 	let editType = $state<CiderTypeKey | undefined>(undefined);
-	let editAppearance = $state<AppearanceKey[]>([]);
+	let editColor = $state<ColorKey | undefined>(undefined);
+	let editClarity = $state<ClarityKey | undefined>(undefined);
 	let editAroma = $state<AromaKey[]>([]);
-	let editFlavor = $state<FlavorKey[]>([]);
+	let editStructure = $state<StructureKey[]>([]);
+	let editFaults = $state<FaultKey[]>([]);
 	let editVintage = $state('');
 	let editAbv = $state('');
 	let editComment = $state('');
@@ -47,11 +57,19 @@
 		CARBONATION_KEYS.map((k) => ({ key: k, label: $t(`carbonation.${k}`) }))
 	);
 	let typeOptions = $derived(TYPE_KEYS.map((k) => ({ key: k, label: $t(`type.${k}`) })));
-	let appearanceOptions = $derived(
-		APPEARANCE_KEYS.map((k) => ({ key: k, label: $t(`appearance.${k}`) }))
+	let colorOptions = $derived(COLOR_KEYS.map((k) => ({ key: k, label: $t(`color.${k}`) })));
+	let clarityOptions = $derived(CLARITY_KEYS.map((k) => ({ key: k, label: $t(`clarity.${k}`) })));
+	let structureOptions = $derived(
+		STRUCTURE_KEYS.map((k) => ({ key: k, label: $t(`structure.${k}`) }))
 	);
-	let aromaOptions = $derived(AROMA_KEYS.map((k) => ({ key: k, label: $t(`aroma.${k}`) })));
-	let flavorOptions = $derived(FLAVOR_KEYS.map((k) => ({ key: k, label: $t(`flavor.${k}`) })));
+	let faultOptions = $derived(FAULT_KEYS.map((k) => ({ key: k, label: $t(`fault.${k}`) })));
+	let aromaGroups = $derived(
+		AROMA_GROUPS.map((g) => ({
+			key: g.key,
+			label: $t(`aromaGroup.${g.key}`),
+			options: g.aromas.map((k) => ({ key: k, label: $t(`aroma.${k}`) }))
+		}))
+	);
 
 	const LEGACY_NOTE_CATEGORIES: NoteCategory[] = [
 		'utseende',
@@ -76,15 +94,18 @@
 		editName = cider.name;
 		editProducer = cider.producer;
 		editSweetness = cider.sweetness;
-		editCarbonation = cider.carbonation;
+		editCarbonation = normalizeCarbonation(cider.carbonation);
 		editType = cider.type;
-		editAppearance = cider.appearance ? [...cider.appearance] : [];
+		// Prefer the new colour/clarity fields, fall back to legacy `appearance`.
+		editColor = cider.color ?? colorFromAppearance(cider.appearance);
+		editClarity = cider.clarity ?? clarityFromAppearance(cider.appearance);
 		editAroma = cider.aroma ? [...cider.aroma] : [];
-		editFlavor = cider.flavor ? [...cider.flavor] : [];
+		editStructure = cider.structure ? [...cider.structure] : [];
+		editFaults = cider.faults ? [...cider.faults] : [];
 		editVintage = cider.vintage ? String(cider.vintage) : '';
 		editAbv = cider.abv ? String(cider.abv) : '';
 		editComment = cider.comment ?? '';
-		showMore = Boolean(editVintage || editAbv || editComment);
+		showMore = Boolean(editFaults.length || editVintage || editAbv || editComment);
 	}
 
 	function startEdit() {
@@ -99,16 +120,19 @@
 	async function saveEdit() {
 		if (!cider) return;
 		saving = true;
+		const { appearance: _legacyAppearance, flavor: _legacyFlavor, ...base } = $state.snapshot(cider);
 		const updated: Cider = {
-			...$state.snapshot(cider),
+			...base,
 			name: editName.trim() || cider.name,
 			producer: editProducer.trim() || cider.producer,
 			sweetness: editSweetness,
 			carbonation: editCarbonation,
 			type: editType,
-			appearance: editAppearance.length ? $state.snapshot(editAppearance) : undefined,
+			color: editColor,
+			clarity: editClarity,
 			aroma: editAroma.length ? $state.snapshot(editAroma) : undefined,
-			flavor: editFlavor.length ? $state.snapshot(editFlavor) : undefined,
+			structure: editStructure.length ? $state.snapshot(editStructure) : undefined,
+			faults: editFaults.length ? $state.snapshot(editFaults) : undefined,
 			vintage: editVintage ? parseInt(editVintage) : undefined,
 			abv: editAbv ? parseFloat(editAbv) : undefined,
 			comment: editComment.trim() || undefined
@@ -140,7 +164,9 @@
 
 	let hasAnyNotes = $derived.by(() => {
 		if (!cider) return false;
-		if (cider.appearance?.length || cider.aroma?.length || cider.flavor?.length) return true;
+		if (cider.color || cider.clarity) return true;
+		if (cider.aroma?.length || cider.structure?.length || cider.faults?.length) return true;
+		if (cider.appearance?.length || cider.flavor?.length) return true;
 		if (cider.comment) return true;
 		if (cider.notes && LEGACY_NOTE_CATEGORIES.some((c) => cider!.notes?.[c])) return true;
 		return false;
@@ -190,25 +216,15 @@
 					options={carbonationOptions}
 					bind:value={editCarbonation}
 				/>
-				<ChipGroup label={$t('cider.type')} options={typeOptions} bind:value={editType} />
+				<ChipGroup label={$t('cider.color')} options={colorOptions} bind:value={editColor} />
+				<ChipGroup label={$t('cider.clarity')} options={clarityOptions} bind:value={editClarity} />
 				<ChipGroup
-					label={$t('cider.appearance')}
-					options={appearanceOptions}
-					bind:value={editAppearance}
+					label={$t('cider.structure')}
+					options={structureOptions}
+					bind:value={editStructure}
 					multi
 				/>
-				<ChipGroup
-					label={$t('cider.aroma')}
-					options={aromaOptions}
-					bind:value={editAroma}
-					multi
-				/>
-				<ChipGroup
-					label={$t('cider.flavor')}
-					options={flavorOptions}
-					bind:value={editFlavor}
-					multi
-				/>
+				<AromaPicker label={$t('cider.aroma')} groups={aromaGroups} bind:value={editAroma} />
 
 				<button
 					type="button"
@@ -222,6 +238,13 @@
 
 				{#if showMore}
 					<div class="more-panel">
+						<ChipGroup
+							label={$t('cider.faults')}
+							options={faultOptions}
+							bind:value={editFaults}
+							multi
+						/>
+						<ChipGroup label={$t('cider.type')} options={typeOptions} bind:value={editType} />
 						<div class="form-row">
 							<div class="form-group">
 								<label for="edit-vintage">{$t('cider.vintage')}</label>
@@ -279,6 +302,18 @@
 						<span class="meta-value">{$t(`type.${cider.type}`)}</span>
 					</div>
 				{/if}
+				{#if cider.color}
+					<div class="meta-row">
+						<span class="meta-label">{$t('cider.color')}</span>
+						<span class="meta-value">{$t(`color.${cider.color}`)}</span>
+					</div>
+				{/if}
+				{#if cider.clarity}
+					<div class="meta-row">
+						<span class="meta-label">{$t('cider.clarity')}</span>
+						<span class="meta-value">{$t(`clarity.${cider.clarity}`)}</span>
+					</div>
+				{/if}
 				{#if cider.style && !cider.sweetness && !cider.carbonation && !cider.type}
 					<div class="meta-row">
 						<span class="meta-label">Stil</span>
@@ -304,16 +339,28 @@
 			</div>
 
 			<div class="notes-section">
-				{#if cider.appearance?.length}
-					<div class="note-block">
-						<h3 class="note-cat-label">{$t('cider.appearance')}</h3>
-						<p class="note-text">{chipLabels(cider.appearance, 'appearance')}</p>
-					</div>
-				{/if}
 				{#if cider.aroma?.length}
 					<div class="note-block">
 						<h3 class="note-cat-label">{$t('cider.aroma')}</h3>
 						<p class="note-text">{chipLabels(cider.aroma, 'aroma')}</p>
+					</div>
+				{/if}
+				{#if cider.structure?.length}
+					<div class="note-block">
+						<h3 class="note-cat-label">{$t('cider.structure')}</h3>
+						<p class="note-text">{chipLabels(cider.structure, 'structure')}</p>
+					</div>
+				{/if}
+				{#if cider.faults?.length}
+					<div class="note-block">
+						<h3 class="note-cat-label">{$t('cider.faults')}</h3>
+						<p class="note-text">{chipLabels(cider.faults, 'fault')}</p>
+					</div>
+				{/if}
+				{#if cider.appearance?.length && !cider.color && !cider.clarity}
+					<div class="note-block">
+						<h3 class="note-cat-label">{$t('cider.appearance')}</h3>
+						<p class="note-text">{chipLabels(cider.appearance, 'appearance')}</p>
 					</div>
 				{/if}
 				{#if cider.flavor?.length}

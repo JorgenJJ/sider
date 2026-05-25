@@ -10,9 +10,10 @@
 		// Single-select binds a string; multi-select binds a string[].
 		value: T | T[] | undefined;
 		multi?: boolean;
+		showLabel?: boolean;
 	}
 
-	let { label, options, value = $bindable(), multi = false }: Props = $props();
+	let { label, options, value = $bindable(), multi = false, showLabel = true }: Props = $props();
 
 	function isSelected(key: T): boolean {
 		if (multi) return Array.isArray(value) && value.includes(key);
@@ -30,7 +31,9 @@
 </script>
 
 <div class="chip-group">
-	<span class="chip-group-label">{label}</span>
+	{#if showLabel}
+		<span class="chip-group-label">{label}</span>
+	{/if}
 	<div class="chips" role={multi ? 'group' : 'radiogroup'} aria-label={label}>
 		{#each options as opt (opt.key)}
 			<button

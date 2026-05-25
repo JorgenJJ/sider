@@ -45,7 +45,8 @@
 	function notePreview(c: Cider): string {
 		const chips: string[] = [];
 		if (c.aroma?.length) chips.push(...c.aroma.map((k) => translate(`aroma.${k}`)));
-		if (c.flavor?.length) chips.push(...c.flavor.map((k) => translate(`flavor.${k}`)));
+		if (c.structure?.length) chips.push(...c.structure.map((k) => translate(`structure.${k}`)));
+		else if (c.flavor?.length) chips.push(...c.flavor.map((k) => translate(`flavor.${k}`)));
 		const text = c.comment ?? c.notes?.aroma ?? c.notes?.smak ?? c.notes?.generelt ?? '';
 		const joined = [chips.join(', '), text].filter(Boolean).join(' · ');
 		return joined.length > 80 ? joined.slice(0, 77) + '…' : joined;
