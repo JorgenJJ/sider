@@ -4,19 +4,24 @@
 	import { saveCider, countCiders } from '$lib/db/ciders';
 	import { triggerInstallPrompt } from '$lib/stores/installPrompt';
 	import ChipGroup from '$lib/components/ChipGroup.svelte';
+	import AromaPicker from '$lib/components/AromaPicker.svelte';
 	import {
 		SWEETNESS_KEYS,
 		CARBONATION_KEYS,
 		TYPE_KEYS,
-		APPEARANCE_KEYS,
-		AROMA_KEYS,
-		FLAVOR_KEYS,
+		COLOR_KEYS,
+		CLARITY_KEYS,
+		STRUCTURE_KEYS,
+		FAULT_KEYS,
+		AROMA_GROUPS,
 		type SweetnessKey,
 		type CarbonationKey,
 		type CiderTypeKey,
-		type AppearanceKey,
-		type AromaKey,
-		type FlavorKey
+		type ColorKey,
+		type ClarityKey,
+		type StructureKey,
+		type FaultKey,
+		type AromaKey
 	} from '$lib/db/schema';
 
 	let name = $state('');
@@ -24,9 +29,11 @@
 	let sweetness = $state<SweetnessKey | undefined>(undefined);
 	let carbonation = $state<CarbonationKey | undefined>(undefined);
 	let type = $state<CiderTypeKey | undefined>('apple');
-	let appearance = $state<AppearanceKey[]>([]);
+	let color = $state<ColorKey | undefined>(undefined);
+	let clarity = $state<ClarityKey | undefined>(undefined);
 	let aroma = $state<AromaKey[]>([]);
-	let flavor = $state<FlavorKey[]>([]);
+	let structure = $state<StructureKey[]>([]);
+	let faults = $state<FaultKey[]>([]);
 	let vintage = $state('');
 	let abv = $state('');
 	let comment = $state('');
@@ -39,11 +46,19 @@
 		CARBONATION_KEYS.map((k) => ({ key: k, label: $t(`carbonation.${k}`) }))
 	);
 	let typeOptions = $derived(TYPE_KEYS.map((k) => ({ key: k, label: $t(`type.${k}`) })));
-	let appearanceOptions = $derived(
-		APPEARANCE_KEYS.map((k) => ({ key: k, label: $t(`appearance.${k}`) }))
+	let colorOptions = $derived(COLOR_KEYS.map((k) => ({ key: k, label: $t(`color.${k}`) })));
+	let clarityOptions = $derived(CLARITY_KEYS.map((k) => ({ key: k, label: $t(`clarity.${k}`) })));
+	let structureOptions = $derived(
+		STRUCTURE_KEYS.map((k) => ({ key: k, label: $t(`structure.${k}`) }))
 	);
-	let aromaOptions = $derived(AROMA_KEYS.map((k) => ({ key: k, label: $t(`aroma.${k}`) })));
-	let flavorOptions = $derived(FLAVOR_KEYS.map((k) => ({ key: k, label: $t(`flavor.${k}`) })));
+	let faultOptions = $derived(FAULT_KEYS.map((k) => ({ key: k, label: $t(`fault.${k}`) })));
+	let aromaGroups = $derived(
+		AROMA_GROUPS.map((g) => ({
+			key: g.key,
+			label: $t(`aromaGroup.${g.key}`),
+			options: g.aromas.map((k) => ({ key: k, label: $t(`aroma.${k}`) }))
+		}))
+	);
 
 	function validate(): boolean {
 		const e: Record<string, string> = {};
@@ -67,9 +82,11 @@
 				sweetness,
 				carbonation,
 				type,
-				appearance: appearance.length ? $state.snapshot(appearance) : undefined,
+				color,
+				clarity,
 				aroma: aroma.length ? $state.snapshot(aroma) : undefined,
-				flavor: flavor.length ? $state.snapshot(flavor) : undefined,
+				structure: structure.length ? $state.snapshot(structure) : undefined,
+				faults: faults.length ? $state.snapshot(faults) : undefined,
 				vintage: vintage ? parseInt(vintage) : undefined,
 				abv: abv ? parseFloat(abv) : undefined,
 				comment: comment.trim() || undefined
@@ -130,14 +147,13 @@
 			/>
 		</div>
 
-		<ChipGroup
-			label={$t('cider.appearance')}
-			options={appearanceOptions}
-			bind:value={appearance}
-			multi
-		/>
-		<ChipGroup label={$t('cider.aroma')} options={aromaOptions} bind:value={aroma} multi />
-		<ChipGroup label={$t('cider.flavor')} options={flavorOptions} bind:value={flavor} multi />
+		<div class="chip-row">
+			<ChipGroup label={$t('cider.color')} options={colorOptions} bind:value={color} />
+			<ChipGroup label={$t('cider.clarity')} options={clarityOptions} bind:value={clarity} />
+		</div>
+
+		<ChipGroup label={$t('cider.structure')} options={structureOptions} bind:value={structure} multi />
+		<AromaPicker label={$t('cider.aroma')} groups={aromaGroups} bind:value={aroma} />
 
 		<button
 			type="button"
@@ -151,6 +167,7 @@
 
 		{#if showMore}
 			<div class="more-panel">
+				<ChipGroup label={$t('cider.faults')} options={faultOptions} bind:value={faults} multi />
 				<ChipGroup label={$t('cider.type')} options={typeOptions} bind:value={type} />
 				<div class="form-row">
 					<div class="form-group">

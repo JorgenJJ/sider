@@ -1,11 +1,17 @@
 # Spec: Forenklet sider-registrering
 
-> **Status:** Done
+> **Status:** Done (sansemodellen utvidet av [flavor-wheel-aromas](./flavor-wheel-aromas.md))
 > **Author:** Jørgen + Claude
 > **Created:** 2026-05-19
-> **Last updated:** 2026-05-19
+> **Last updated:** 2026-05-25
 
 ---
+
+> **Oppdatering 2026-05-25:** Sansemodellen i denne spec-en (chips for utseende/lukt/smak)
+> er utvidet til en smakshjul-basert modell — se [flavor-wheel-aromas](./flavor-wheel-aromas.md)
+> og [ADR-006](../decisions/006-tasting-wheel-sensory-model.md). Spesielt er **REQ-01** (alt på
+> én skjerm uten skroll) relaksert til «kompakt med minimal skroll», og REQ-04s flate
+> chip-akser er erstattet av Farge/Klarhet/Struktur + grupperte aromaer.
 
 ## Overview
 
