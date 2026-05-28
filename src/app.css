@@ -41,6 +41,14 @@
 	--safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Android Chrome reports safe-area-inset-bottom as 0 in PWA standalone mode
+   even when the gesture pill overlays the app — see docs/bugs/004. */
+@media (display-mode: standalone) {
+	:root {
+		--safe-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+	}
+}
+
 /* ── Reset ─────────────────────────────────────────────────────────────────── */
 *,
 *::before,

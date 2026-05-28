@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#3D6B4F"/>
-  <text x="16" y="23" text-anchor="middle" font-size="20" font-family="system-ui,sans-serif">🍎</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#3D6B4F"/>
+  <circle cx="216" cy="320" r="120" fill="#F7F4EF"/>
+  <circle cx="296" cy="320" r="120" fill="#F7F4EF"/>
+  <path d="M252 198 C249 168 240 152 262 132 C273 138 270 165 268 198 Z" fill="#B87333"/>
+  <path d="M268 158 C300 130 360 130 372 162 C346 192 296 196 268 158 Z" fill="#B87333"/>
 </svg>

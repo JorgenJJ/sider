@@ -185,12 +185,17 @@ Available in the app shell / settings panel. Choice persisted to `localStorage`.
 
 ### 5.6 Install prompt (PWA)
 
-The app prompts the user to install after they save their first cider — the earliest moment at which the value of offline persistence is obvious. Two distinct flows are required:
+The app has two install nudges:
 
-- **Chrome / Android:** capture `beforeinstallprompt`, show a bottom sheet, defer to the native browser prompt.
-- **iOS Safari:** no programmatic install API; show a bottom sheet with manual Share → "Legg til på hjemmskjerm" instructions.
+- **Top banner (`InstallBanner.svelte`)** — appears immediately on the first browser visit (any page). Slim, dismissible, with the brand icon, copy and an Installer-CTA. This is the nudge for users who are just trying the app in a browser tab; they should know they can install without first having to log a cider.
+- **Bottom sheet (`InstallPrompt.svelte`)** — appears once after the user saves their first cider. This is the original "value moment" trigger from the spec — by then the user has experienced logging, and offline persistence is obviously useful.
 
-Already-installed users (`display-mode: standalone`) and users who have previously dismissed are never prompted. See full details in [pwa-install-prompt spec](./specs/pwa-install-prompt.md).
+Both honour the same install criteria:
+
+- **Chrome / Android:** capture `beforeinstallprompt`, defer to the native browser prompt when the user taps Installer.
+- **iOS Safari:** no programmatic install API; the banner delegates to the bottom sheet, which renders manual Share → "Legg til på hjemmskjerm" instructions.
+
+Dismissals are persisted separately (`pwa-banner-dismissed` and `pwa-install-dismissed`) so dismissing the banner does not silence the post-save sheet, and vice versa. Already-installed users (`display-mode: standalone`) and users inside in-app browsers (Messenger/Instagram/etc.) are never shown either prompt. See [pwa-install-prompt spec](./specs/pwa-install-prompt.md) for the original requirements.
 
 ### 5.7 In-app browser detection (REQ-01)
 
@@ -271,7 +276,7 @@ https://sider.<account>.workers.dev  (or custom domain)
 - [ ] **Image capture** (possible goal): Browser camera + OCR via `Tesseract.js` to pre-fill name/producer. Scope for v2. `imagePath` is reserved in the v1 schema to avoid a future migration.
 - [ ] **Custom domain**: Use a custom domain (e.g. `sider.no`) or the default `*.pages.dev`?
 - [ ] **Analytics**: Any privacy-respecting analytics (e.g. Cloudflare Web Analytics — free, no cookies) desired?
-- [ ] **PWA icons**: Placeholder solid-green PNGs are in `static/icons/`. Proper branded icons need to be designed before public release.
+- [x] **PWA icons**: ~~Placeholder solid-green PNGs are in `static/icons/`. Proper branded icons need to be designed before public release.~~ → **Done** (2026-05-28). Master SVG at `static/icons/icon.svg` (cream apple silhouette with copper stem and leaf on the brand-green tile). PNGs at 192×192 and 512×512 are regenerated from the SVG via `node scripts/generate-icons.mjs`. The favicon (`static/favicon.svg`) uses the same artwork with rounded corners for tab-bar rendering.
 - [x] **Cloudflare secrets**: ~~`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` must be added to GitHub repository secrets before the CI/CD pipeline can deploy.~~ → **No longer applicable** (2026-05-19). The deploy now uses Cloudflare's native Git integration (see ADR-004); no GitHub secrets are required.
 
 ---

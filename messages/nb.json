@@ -177,6 +177,8 @@
   "install.description": "Få rask tilgang og bruk Sider uten internett",
   "install.cta": "Installer",
   "install.dismiss": "Ikke nå",
+  "install.banner.title": "Installer Sider",
+  "install.banner.subtitle": "Bruk uten internett",
   "install.ios.instruction": "Trykk på Del-knappen (⬆) nederst i Safari, deretter «Legg til på hjemmskjerm»",
   "install.ios.dismiss": "Forstått",
 
