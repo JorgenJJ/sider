@@ -10,6 +10,7 @@ Agents: when you discover a bug or potential issue during implementation, create
 |------|---------|----------|--------|
 | [001-inapp-browser-data-isolation.md](./001-inapp-browser-data-isolation.md) | Data logged in an in-app browser is invisible in the user's main browser | High | Open — mitigated by detection banner |
 | [002-orphan-i18n-keys.md](./002-orphan-i18n-keys.md) | i18n keys without a matching schema key (earth/oak/spicy/long/clear) | Low | Fixed |
+| [003-pwa-manifest-not-linked.md](./003-pwa-manifest-not-linked.md) | Web App Manifest ble bygget men aldri lenket fra HTML — appen kunne ikke installeres | High | Fixed |
 
 ## Severity guide
 
