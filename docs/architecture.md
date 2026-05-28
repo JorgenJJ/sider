@@ -215,6 +215,8 @@ Locale detection order:
 - Runtime caching for any future external font/icon CDN fetches.
 - App shell loads fully offline after first visit.
 - No network requests at runtime in v1 — data is 100% local.
+- **Manifest wiring:** `vite-plugin-pwa` builds `manifest.webmanifest` from the inline config in `vite.config.ts`, but the plugin's automatic HTML injection does not reach the SvelteKit-rendered `index.html`. The `<link rel="manifest">` is therefore added explicitly in `src/app.html` ([bug-003](./bugs/003-pwa-manifest-not-linked.md)).
+- **Service worker registration:** Handled by SvelteKit's built-in auto-registration of `src/service-worker.ts`. The same file is processed by `vite-plugin-pwa`'s `injectManifest` strategy to embed the Workbox precache list, so SvelteKit ends up registering the Workbox-built SW. `vite-plugin-pwa` also emits an unused `registerSW.js` artefact — it is harmless and we do not load it.
 - **Known limitation:** IndexedDB storage is per browser origin + browser instance. Data logged in one browser is not visible in another. The in-app browser banner (§5.7) mitigates accidental data scatter.
 - **Data loss mitigation:** JSON export/import (§5.4) allows users to back up and restore their data manually. This is the only safety net in v1.
 

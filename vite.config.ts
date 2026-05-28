@@ -12,12 +12,14 @@ export default defineConfig({
 			filename: 'service-worker.ts',
 			strategies: 'injectManifest',
 			injectManifest: {
-				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}']
+				globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2,webmanifest}']
 			},
 			manifest: {
+				id: '/',
 				name: 'Sider',
 				short_name: 'Sider',
 				description: 'Logg og smak norske sidere',
+				lang: 'nb',
 				theme_color: '#3D6B4F',
 				background_color: '#F7F4EF',
 				display: 'standalone',
