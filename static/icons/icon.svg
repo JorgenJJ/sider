@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Sider">
+  <title>Sider</title>
+  <!-- Brand-green tile; OS will mask this into a circle / squircle. -->
+  <rect width="512" height="512" fill="#3D6B4F"/>
+  <!-- Apple body: two overlapping circles produce the classic dimpled silhouette. -->
+  <g>
+    <circle cx="216" cy="320" r="120" fill="#F7F4EF"/>
+    <circle cx="296" cy="320" r="120" fill="#F7F4EF"/>
+    <!-- Stem in copper. -->
+    <path d="M252 198 C249 168 240 152 262 132 C273 138 270 165 268 198 Z" fill="#B87333"/>
+    <!-- Leaf in copper. -->
+    <path d="M268 158 C300 130 360 130 372 162 C346 192 296 196 268 158 Z" fill="#B87333"/>
+  </g>
+</svg>

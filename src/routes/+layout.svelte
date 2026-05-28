@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { initLocale, t } from '$lib/i18n';
 	import InstallPrompt from '$lib/components/InstallPrompt.svelte';
+	import InstallBanner from '$lib/components/InstallBanner.svelte';
 	import InAppBrowserBanner from '$lib/components/InAppBrowserBanner.svelte';
 
 	let { children } = $props();
@@ -27,6 +28,7 @@
 
 <div class="app-shell">
 	<InAppBrowserBanner />
+	<InstallBanner />
 
 	<main class="app-main">
 		{@render children()}
